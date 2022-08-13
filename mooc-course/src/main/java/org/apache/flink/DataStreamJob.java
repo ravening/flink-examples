@@ -19,6 +19,7 @@
 package org.apache.flink;
 
 import com.google.gson.Gson;
+import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.models.SensorData;
 import org.apache.flink.sources.RandomString;
@@ -95,16 +96,31 @@ public class DataStreamJob {
 
 		// second way of mapping
 		DataStream<SensorData> sensorDataStream = sensorDataSource
-				.map((MapFunction<String, SensorData>) s -> new Gson().fromJson(s, SensorData.class));
+				.map((MapFunction<String, SensorData>) s -> new Gson().fromJson(s, SensorData.class))
+				;
 
-		sensorDataStream.process(new ProcessFunction<SensorData, String>() {
-
+		sensorDataStream.flatMap(new FlatMapFunction<SensorData, SensorData>() {
 			@Override
-			public void processElement(SensorData sensorData, ProcessFunction<SensorData, String>.Context context, Collector<String> collector) throws Exception {
-				System.out.println(sensorData);
-				collector.collect(sensorData.toString());
+			public void flatMap(SensorData sensorData, Collector<SensorData> collector) throws Exception {
+				Long sensorId = sensorData.getSensorId();
+				if (sensorId == 10 || sensorId == 19 || sensorId == 29 || sensorId == 1 || sensorId == 3 || sensorId == 5
+				|| sensorId == 101 || sensorId == 20 || sensorId == 30 || sensorId == 40) {
+
+				} else {
+					SensorData sensorData1 = new SensorData(sensorData.getSensorType(), sensorData.getValue(), 1L, sensorData.getTimestamp());
+					collector.collect(sensorData1);
+					System.out.println(sensorData1);
+				}
 			}
 		});
+//		sensorDataStream.process(new ProcessFunction<SensorData, String>() {
+//
+//			@Override
+//			public void processElement(SensorData sensorData, ProcessFunction<SensorData, String>.Context context, Collector<String> collector) throws Exception {
+//				System.out.println(sensorData);
+//				collector.collect(sensorData.toString());
+//			}
+//		});
 //		sensorDataSource.process(new ProcessFunction<String, String>() {
 //			@Override
 //			public void processElement(String s, ProcessFunction<String, String>.Context context, Collector<String> collector) throws Exception {

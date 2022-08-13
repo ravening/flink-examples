@@ -18,10 +18,16 @@
 
 package spendreport;
 
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.walkthrough.common.entity.Alert;
 import org.apache.flink.walkthrough.common.entity.Transaction;
+
+import java.util.Optional;
 
 /**
  * Skeleton code for implementing a fraud detector.
@@ -34,15 +40,41 @@ public class FraudDetector extends KeyedProcessFunction<Long, Transaction, Alert
 	private static final double LARGE_AMOUNT = 500.00;
 	private static final long ONE_MINUTE = 60 * 1000;
 
+	private transient ValueState<Boolean> flagState;
+
 	@Override
 	public void processElement(
 			Transaction transaction,
 			Context context,
 			Collector<Alert> collector) throws Exception {
 
-		Alert alert = new Alert();
-		alert.setId(transaction.getAccountId());
+		Boolean lastTransactionWasSmall = flagState.value();
 
-		collector.collect(alert);
+		if (Optional.ofNullable(lastTransactionWasSmall).isPresent()) {
+			if (transaction.getAmount() > LARGE_AMOUNT) {
+				Alert alert = new Alert();
+				alert.setId(transaction.getAccountId());
+				collector.collect(alert);
+			}
+
+			// clear the state
+			flagState.clear();
+		}
+
+		if (transaction.getAmount() < SMALL_AMOUNT) {
+			// set flag to true
+			flagState.update(true);
+		}
+
+	}
+
+	@Override
+	public void open(Configuration parameters) throws Exception {
+		ValueStateDescriptor<Boolean> flagDescriptor = new ValueStateDescriptor<Boolean>(
+				"flag",
+				Types.BOOLEAN
+		);
+
+		flagState = getRuntimeContext().getState(flagDescriptor);
 	}
 }
