@@ -6,6 +6,8 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.util.Collector;
 
 import java.util.Arrays;
@@ -16,16 +18,20 @@ public class CountMoviesByGenre {
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
         FileReader fileReader = new FileReader();
-        String filename = fileReader.getFilePath("movies.csv");
+//        String filename = fileReader.getFilePath("movies.csv");
+
+        ParameterTool parameters = ParameterTool.fromArgs(args);
+        String input = parameters.getRequired("input");
+        String output = parameters.getRequired("output");
 
         // read the file
-        DataSet<Tuple3<Integer, String, String>> movies = env.readCsvFile(filename)
+        DataSet<Tuple3<Integer, String, String>> movies = env.readCsvFile(input)
                 .ignoreFirstLine()
                 .parseQuotedStrings('"')
                 .ignoreInvalidLines()
                 .types(Integer.class, String.class, String.class);
 
-        List<Tuple2<String, Integer>> genreCount = movies.flatMap(
+        movies.flatMap(
                 new FlatMapFunction<Tuple3<Integer, String, String>,
                         Tuple2<String, String>>() {
                     @Override
@@ -53,9 +59,13 @@ public class CountMoviesByGenre {
 
                         collector.collect(new Tuple2<>(genre, count));
                     }
-                }).collect();
+                })
+                .writeAsText(output, FileSystem.WriteMode.OVERWRITE);
+//                .collect();
 
-        genreCount.parallelStream()
-                .forEach(System.out::println);
+//        genreCount.parallelStream()
+//                .forEach(System.out::println);
+
+        env.execute("CountMoviesByGenre");
     }
 }
