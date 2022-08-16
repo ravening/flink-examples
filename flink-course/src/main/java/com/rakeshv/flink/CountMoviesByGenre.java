@@ -11,7 +11,6 @@ import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.util.Collector;
 
 import java.util.Arrays;
-import java.util.List;
 
 public class CountMoviesByGenre {
     public static void main(String[] args) throws Exception {

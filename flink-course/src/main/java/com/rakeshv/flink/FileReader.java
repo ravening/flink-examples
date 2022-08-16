@@ -1,6 +1,5 @@
 package com.rakeshv.flink;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
 

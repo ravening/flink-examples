@@ -23,12 +23,7 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 

@@ -15,11 +15,18 @@ public class MapToTweets implements MapFunction<String, Tweet> {
     @Override
     public Tweet map(String s) throws Exception {
         JsonNode tweetJson = mapper.readTree(s);
-        JsonNode textNode = tweetJson.get("text");
+        JsonNode user = tweetJson.get("user");
         JsonNode langNode = tweetJson.get("lang");
 
+        if (user == null || langNode == null) {
+            return null;
+        }
+
+        JsonNode textNode = tweetJson.get("text");
+
         String text = textNode == null ? "" : textNode.textValue();
-        String lang = langNode == null ? "en" : langNode.textValue();
+        String lang = langNode.textValue();
+        String screenName = user.get("screen_name").asText();
 
         List<String> tags = new ArrayList<>();
 
@@ -38,6 +45,7 @@ public class MapToTweets implements MapFunction<String, Tweet> {
         return Tweet.builder()
                 .language(lang)
                 .text(text)
+                .userName(screenName)
                 .tags(tags).build();
     }
 }
