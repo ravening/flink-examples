@@ -61,6 +61,6 @@ public class TopHashTag {
                 })
                 .print();
 
-        env.execute("Top hastags");
+        env.execute("Top hashtags");
     }
 }
